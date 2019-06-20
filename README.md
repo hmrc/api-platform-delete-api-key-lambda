@@ -1,7 +1,15 @@
 
 # api-platform-delete-api-key-lambda
 
-This is a placeholder README.md for a new repository
+Lambda function to delete an AWS API Gateway API Key.
+
+The `event` for the Lambda function is an SQS message, the body of the SQS message is JSON. For example:
+```
+{
+    "apiKeyName": "AN_API_KEY_NAME"
+}
+```
+
 
 ### License
 
