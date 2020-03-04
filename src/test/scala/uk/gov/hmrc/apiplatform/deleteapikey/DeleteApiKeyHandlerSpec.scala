@@ -14,7 +14,7 @@ import software.amazon.awssdk.services.apigateway.ApiGatewayClient
 import software.amazon.awssdk.services.apigateway.model.{ApiKey, _}
 import uk.gov.hmrc.aws_gateway_proxied_request_lambda.JsonMapper
 
-import scala.collection.JavaConversions.seqAsJavaList
+import scala.collection.JavaConverters._
 
 class DeleteApiKeyHandlerSpec extends WordSpecLike with Matchers with MockitoSugar with JsonMapper {
 
@@ -26,7 +26,7 @@ class DeleteApiKeyHandlerSpec extends WordSpecLike with Matchers with MockitoSug
     val message = new SQSMessage()
     message.setBody(requestBody)
     val sqsEvent = new SQSEvent()
-    sqsEvent.setRecords(List(message))
+    sqsEvent.setRecords(List(message).asJava)
 
     val mockAPIGatewayClient: ApiGatewayClient = mock[ApiGatewayClient]
     val deleteApiKeyHandler = new DeleteApiKeyHandler(mockAPIGatewayClient)
@@ -46,7 +46,7 @@ class DeleteApiKeyHandlerSpec extends WordSpecLike with Matchers with MockitoSug
     }
 
     "not do anything when API Key is not found" in new Setup {
-      when(mockAPIGatewayClient.getApiKeys(any[GetApiKeysRequest])).thenReturn(buildNonMatchingGetApiKeysResponse(1))
+      when(mockAPIGatewayClient.getApiKeys(any[GetApiKeysRequest])).thenReturn(GetApiKeysResponse.builder().build())
 
       deleteApiKeyHandler.handleInput(sqsEvent, mockContext)
 
@@ -54,7 +54,7 @@ class DeleteApiKeyHandlerSpec extends WordSpecLike with Matchers with MockitoSug
     }
 
     "throw an Exception if multiple messages have been retrieved from SQS" in new Setup {
-      sqsEvent.setRecords(List(message, message))
+      sqsEvent.setRecords(List(message, message).asJava)
 
       val exception = intercept[IllegalArgumentException](deleteApiKeyHandler.handleInput(sqsEvent, mockContext))
 
@@ -62,7 +62,7 @@ class DeleteApiKeyHandlerSpec extends WordSpecLike with Matchers with MockitoSug
     }
 
     "throw an Exception if no messages have been retrieved from SQS" in new Setup {
-      sqsEvent.setRecords(List())
+      sqsEvent.setRecords(List.empty.asJava)
 
       val exception = intercept[IllegalArgumentException](deleteApiKeyHandler.handleInput(sqsEvent, mockContext))
 
@@ -87,11 +87,4 @@ class DeleteApiKeyHandlerSpec extends WordSpecLike with Matchers with MockitoSug
       .build()
   }
 
-  def buildNonMatchingGetApiKeysResponse(count: Int): GetApiKeysResponse = {
-    val items: Seq[ApiKey] = (1 to count).map(c => ApiKey.builder().id(s"$c").name(s"Item $c").build())
-
-    GetApiKeysResponse.builder()
-      .items(seqAsJavaList(items))
-      .build()
-  }
 }
