@@ -2,15 +2,13 @@ lazy val appName = "api-platform-delete-api-key-lambda"
 lazy val appDependencies: Seq[ModuleID] = compileDependencies ++ testDependencies
 
 lazy val compileDependencies = Seq(
-  "uk.gov.hmrc" %% "api-platform-manage-api" % "0.44.0"
+  "uk.gov.hmrc" %% "api-platform-manage-api" % "0.49.0"
 )
-
-lazy val testScope: String = "test"
 
 lazy val testDependencies = Seq(
-  "org.scalatest" %% "scalatest" % "3.0.5" % testScope,
-  "org.mockito" % "mockito-core" % "2.25.1" % testScope
-)
+  "org.scalatest" %% "scalatest"                % "3.2.18",
+  "org.mockito"   %% "mockito-scala-scalatest"  % "1.17.29"
+).map(_ % Test)
 
 lazy val plugins: Seq[Plugins] = Seq()
 
@@ -18,10 +16,10 @@ lazy val lambda = (project in file("."))
   .enablePlugins(plugins: _*)
   .settings(
     name := appName,
-    scalaVersion := "2.12.10",
+    scalaVersion := "2.13.16",
     libraryDependencies ++= appDependencies,
-    parallelExecution in Test := false,
-    fork in Test := false,
+    Test / parallelExecution := false,
+    Test / fork := false,
     retrieveManaged := true
   )
   .settings(
@@ -29,17 +27,20 @@ lazy val lambda = (project in file("."))
     resolvers += Resolver.jcenterRepo
   )
   .settings(
-    assemblyOutputPath in assembly := file(s"./$appName.zip"),
-    assemblyMergeStrategy in assembly := {
+   assembly / assemblyOutputPath := file(s"./$appName.zip"),
+    assembly / assemblyMergeStrategy := {
+      case PathList("module-info.class") => MergeStrategy.first
+      case PathList("META-INF", "versions", "9", "module-info.class") => MergeStrategy.last
+      case PathList("META-INF", xs @ _*) => MergeStrategy.first
       case path if path.endsWith("io.netty.versions.properties") => MergeStrategy.discard
       case path if path.endsWith("BuildInfo$.class") => MergeStrategy.discard
       case path =>
-        val oldStrategy = (assemblyMergeStrategy in assembly).value
+        val oldStrategy = (assembly / assemblyMergeStrategy).value
         oldStrategy(path)
     }
   )
 
 // Coverage configuration
-coverageMinimum := 80
+coverageMinimumStmtTotal := 80
 coverageFailOnMinimum := true
 coverageExcludedPackages := "<empty>"
