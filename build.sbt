@@ -6,7 +6,7 @@ lazy val compileDependencies = Seq(
 )
 
 lazy val testDependencies = Seq(
-  "org.scalatest"     %% "scalatest"      % "3.2.18",
+  "org.scalatest"     %% "scalatest"      % "3.2.19",
   "org.mockito"       %  "mockito-core"   % "5.18.0",
   "org.scalatestplus" %% "mockito-5-18"   % "3.2.19.0"
 ).map(_ % Test)
