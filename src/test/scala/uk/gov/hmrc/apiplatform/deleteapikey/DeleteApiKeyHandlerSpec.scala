@@ -40,11 +40,14 @@ class DeleteApiKeyHandlerSpec extends AnyWordSpecLike with Matchers with Mockito
   "Delete API Key Handler" should {
     "delete the API Key from API Gateway when found" in new Setup {
       when(mockAPIGatewayClient.getApiKeys(any[GetApiKeysRequest])).thenReturn(buildMatchingGetApiKeysResponse(apiKeyId, apiKeyName))
-      val deleteRequestCaptor: ArgumentCaptor[DeleteApiKeyRequest] = ArgumentCaptor.forClass(classOf[DeleteApiKeyRequest])
-      when(mockAPIGatewayClient.deleteApiKey(deleteRequestCaptor.capture())).thenReturn(DeleteApiKeyResponse.builder().build())
-
+      when(mockAPIGatewayClient.deleteApiKey(any[DeleteApiKeyRequest])).thenReturn(DeleteApiKeyResponse.builder().build())
+      
       deleteApiKeyHandler.handleInput(sqsEvent, mockContext)
 
+
+      val deleteRequestCaptor: ArgumentCaptor[DeleteApiKeyRequest] = ArgumentCaptor.forClass(classOf[DeleteApiKeyRequest])
+      verify(mockAPIGatewayClient).deleteApiKey(deleteRequestCaptor.capture())
+      
       deleteRequestCaptor.getValue.apiKey() shouldEqual apiKeyId
     }
 
