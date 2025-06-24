@@ -6,8 +6,9 @@ lazy val compileDependencies = Seq(
 )
 
 lazy val testDependencies = Seq(
-  "org.scalatest" %% "scalatest"                % "3.2.18",
-  "org.mockito"   %% "mockito-scala-scalatest"  % "1.17.29"
+  "org.scalatest"     %% "scalatest"      % "3.2.18",
+  "org.mockito"       %  "mockito-core"   % "5.18.0",
+  "org.scalatestplus" %% "mockito-5-18"   % "3.2.19.0"
 ).map(_ % Test)
 
 lazy val plugins: Seq[Plugins] = Seq()
@@ -19,7 +20,7 @@ lazy val lambda = (project in file("."))
     scalaVersion := "2.13.16",
     libraryDependencies ++= appDependencies,
     Test / parallelExecution := false,
-    Test / fork := true,
+    Test / fork := false,
   )
   .settings(
     resolvers += "hmrc-releases" at "https://artefacts.tax.service.gov.uk/artifactory/hmrc-releases/",

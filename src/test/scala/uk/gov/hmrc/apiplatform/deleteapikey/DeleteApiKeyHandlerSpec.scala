@@ -11,7 +11,7 @@ import org.mockito.Mockito.{times, verify, when}
 import org.scalatest._
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpecLike
-import org.mockito.scalatest.MockitoSugar
+import org.scalatestplus.mockito.MockitoSugar
 import software.amazon.awssdk.services.apigateway.ApiGatewayClient
 import software.amazon.awssdk.services.apigateway.model.{ApiKey, _}
 import uk.gov.hmrc.api_platform_manage_api.utils.JsonMapper
