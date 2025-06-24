@@ -19,7 +19,7 @@ lazy val lambda = (project in file("."))
     scalaVersion := "2.13.16",
     libraryDependencies ++= appDependencies,
     Test / parallelExecution := false,
-    Test / fork := false,
+    Test / fork := true,
   )
   .settings(
     resolvers += "hmrc-releases" at "https://artefacts.tax.service.gov.uk/artifactory/hmrc-releases/",
