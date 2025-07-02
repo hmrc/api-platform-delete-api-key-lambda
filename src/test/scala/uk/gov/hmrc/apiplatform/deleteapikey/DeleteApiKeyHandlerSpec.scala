@@ -9,14 +9,16 @@ import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.any
 import org.mockito.Mockito.{times, verify, when}
 import org.scalatest._
-import org.scalatest.mockito.MockitoSugar
+import org.scalatest.matchers.should.Matchers
+import org.scalatest.wordspec.AnyWordSpecLike
+import org.scalatestplus.mockito.MockitoSugar
 import software.amazon.awssdk.services.apigateway.ApiGatewayClient
 import software.amazon.awssdk.services.apigateway.model.{ApiKey, _}
-import uk.gov.hmrc.aws_gateway_proxied_request_lambda.JsonMapper
+import uk.gov.hmrc.api_platform_manage_api.utils.JsonMapper
 
 import scala.collection.JavaConverters._
 
-class DeleteApiKeyHandlerSpec extends WordSpecLike with Matchers with MockitoSugar with JsonMapper {
+class DeleteApiKeyHandlerSpec extends AnyWordSpecLike with Matchers with MockitoSugar with JsonMapper {
 
   trait Setup {
     val apiKeyId: String = UUID.randomUUID().toString
@@ -31,17 +33,21 @@ class DeleteApiKeyHandlerSpec extends WordSpecLike with Matchers with MockitoSug
     val mockAPIGatewayClient: ApiGatewayClient = mock[ApiGatewayClient]
     val deleteApiKeyHandler = new DeleteApiKeyHandler(mockAPIGatewayClient)
     val mockContext = mock[Context]
-    when(mockContext.getLogger).thenReturn(mock[LambdaLogger])
+    val mockLogger = mock[LambdaLogger]
+    when(mockContext.getLogger).thenReturn(mockLogger)
   }
 
   "Delete API Key Handler" should {
     "delete the API Key from API Gateway when found" in new Setup {
       when(mockAPIGatewayClient.getApiKeys(any[GetApiKeysRequest])).thenReturn(buildMatchingGetApiKeysResponse(apiKeyId, apiKeyName))
-      val deleteRequestCaptor: ArgumentCaptor[DeleteApiKeyRequest] = ArgumentCaptor.forClass(classOf[DeleteApiKeyRequest])
-      when(mockAPIGatewayClient.deleteApiKey(deleteRequestCaptor.capture())).thenReturn(DeleteApiKeyResponse.builder().build())
-
+      when(mockAPIGatewayClient.deleteApiKey(any[DeleteApiKeyRequest])).thenReturn(DeleteApiKeyResponse.builder().build())
+      
       deleteApiKeyHandler.handleInput(sqsEvent, mockContext)
 
+
+      val deleteRequestCaptor: ArgumentCaptor[DeleteApiKeyRequest] = ArgumentCaptor.forClass(classOf[DeleteApiKeyRequest])
+      verify(mockAPIGatewayClient).deleteApiKey(deleteRequestCaptor.capture())
+      
       deleteRequestCaptor.getValue.apiKey() shouldEqual apiKeyId
     }
 
@@ -51,6 +57,7 @@ class DeleteApiKeyHandlerSpec extends WordSpecLike with Matchers with MockitoSug
       deleteApiKeyHandler.handleInput(sqsEvent, mockContext)
 
       verify(mockAPIGatewayClient, times(0)).deleteApiKey(any[DeleteApiKeyRequest])
+      verify(mockLogger, times(1)).log(s"API Key with name $apiKeyName not found")
     }
 
     "throw an Exception if multiple messages have been retrieved from SQS" in new Setup {
